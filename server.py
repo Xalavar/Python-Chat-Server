@@ -2,14 +2,26 @@ import socket  # importing socket library for creating a socket
 import sys  # importing sys library for program termination
 import signal  # importing signal which allows keyboard interrupt exceptions asynchronously
 
+currentUsers = []
+
 
 def handleChildClientConnection(client):
     while True:
         try:
             message = client.recv(1024).decode()
-            # do sum with message
+            # message can be JOIN, LIST, etc...
+
+            # pretend message was a JOIN request
+            # add them to users
+            message_array = message.split(" ")
+            request = message_array[0]
+            if request == "JOIN":
+                currentUsers.append(message_array[1])
+                print(f"{message_array[1]} has joined!")
+            elif request == "LIST":
+                for user in currentUsers:
+                    print(user)
             sys.stdout.flush()  # Flush the output buffer
-            print(message)
             sys.stdout.flush()  # Flush the output buffer
             client.send(message.encode())
         except:

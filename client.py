@@ -27,7 +27,7 @@ def main():
 
             response = cli_sock.recv(1024)
 
-            print("From server: ", response.decode())
+            # print("From server: ", response.decode())
 
         except KeyboardInterrupt:
             print("\Client terminated by user (Ctrl-C).")
