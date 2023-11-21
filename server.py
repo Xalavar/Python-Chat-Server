@@ -1,6 +1,7 @@
 import socket  # importing socket library for creating a socket
 import sys  # importing sys library for program termination
 import signal  # importing signal which allows keyboard interrupt exceptions asynchronously
+import threading
 
 currentUsers = []
 
@@ -63,7 +64,12 @@ def main():
             sys.stdout.flush()  # Flush the output buffer
             print(f"Connected with {addr}")
             sys.stdout.flush()  # Flush the output buffer
-            handleChildClientConnection(connectionSocket)
+            # Spawn a new thread to handle the client
+            client_handler = threading.Thread(
+                target=handleChildClientConnection, args=(connectionSocket,)
+            )
+            client_handler.start()
+            # handleChildClientConnection(connectionSocket)
         except KeyboardInterrupt:
             # if the user enters Ctrl+c, close the socket and terminate the program
             print("\nServer terminated.")
