@@ -19,9 +19,16 @@ def handleChildClientConnection(client):
             if request == "JOIN":
                 currentUsers.append(message_array[1])
                 print(f"{message_array[1]} has joined!")
-            elif request == "LIST":
+            if request == "LIST":
                 for user in currentUsers:
                     print(user)
+            if request == "QUIT":
+                # remove the user from currentUsers
+                currentUsers.remove(message_array[1])
+                message = message_array[1] + " left" 
+
+	    # still need to figure out how to show someone left on other connected client's ui
+
             sys.stdout.flush()  # Flush the output buffer
             sys.stdout.flush()  # Flush the output buffer
             client.send(message.encode())
@@ -49,7 +56,7 @@ def main():
     )  # use the port number from the command line arguments, cast as integer
 
     svr_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    svr_sock.bind(("", svr_port))  # bind socket to the server port
+    svr_sock.bind(("ecs-codingx.csus.edu", svr_port))  # bind socket to the server port
 
     svr_sock.listen(1)
 
