@@ -3,39 +3,58 @@ import sys  # importing sys library for program termination
 import signal  # importing signal which allows keyboard interrupt exceptions asynchronously
 import threading
 
-currentUsers = []
+currentUsers = {}
+registered_clients = {}
 
 
-def handleChildClientConnection(client):
+def handleChildClientConnection(client, client_address):
     while True:
         try:
             message = client.recv(1024).decode()
             # message can be JOIN, LIST, etc...
 
-            # pretend message was a JOIN request
-            # add them to users
             message_array = message.split(" ")
             request = message_array[0]
             if request == "JOIN":
-                currentUsers.append(message_array[1])
-                print(f"{message_array[1]} has joined!")
-            if request == "LIST":
-                for user in currentUsers:
-                    print(user)
-            if request == "QUIT":
+                if len(currentUsers) >= 10:
+                    sys.stdout.flush()  # Flush the output buffer
+                    print("Too many users.")
+                else:
+                    currentUsers[client_address] = message_array[1]
+                    sys.stdout.flush()  # Flush the output buffer
+                    print(f"{message_array[1]} has joined!")
+                    registered_clients[client_address] = client
+                    msg = "You have joined."
+                    client.send(msg.encode())
+            elif request == "LIST":
+                sys.stdout.flush()  # Flush the output buffer
+                print("Current Users: ")
+                list_of_users = ""
+                for key in currentUsers:
+                    print(currentUsers[key])
+                    list_of_users += currentUsers[key] + ", "
+                list_of_users = list_of_users[:-2]
+                client.send(list_of_users.encode())
+            elif request == "QUIT":
                 # remove the user from currentUsers
-                currentUsers.remove(message_array[1])
-                message = message_array[1] + " left" 
-
-	    # still need to figure out how to show someone left on other connected client's ui
-
+                sys.stdout.flush()  # Flush the output buffer
+                if currentUsers[client_address]:
+                    print(f"\n{currentUsers[client_address]} left the chat.")
+                sys.stdout.flush()  # Flush the output buffer
+                del registered_clients[client_address]
+                del currentUsers[client_address]
+                client.close()
+                break
+            else:
+                print(f"message not understood")
             sys.stdout.flush()  # Flush the output buffer
+        except Exception as e:
             sys.stdout.flush()  # Flush the output buffer
-            client.send(message.encode())
-        except:
+            if currentUsers[client_address]:
+                print(f"\n{currentUsers[client_address]} left the chat.")
             sys.stdout.flush()  # Flush the output buffer
-            print("\nClient terminated.")
-            sys.stdout.flush()  # Flush the output buffer
+            del registered_clients[client_address]
+            del currentUsers[client_address]
             client.close()
             break
 
@@ -56,7 +75,7 @@ def main():
     )  # use the port number from the command line arguments, cast as integer
 
     svr_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    svr_sock.bind(("ecs-codingx.csus.edu", svr_port))  # bind socket to the server port
+    svr_sock.bind(("", svr_port))  # bind socket to the server port
 
     svr_sock.listen(1)
 
@@ -73,7 +92,7 @@ def main():
             sys.stdout.flush()  # Flush the output buffer
             # Spawn a new thread to handle the client
             client_handler = threading.Thread(
-                target=handleChildClientConnection, args=(connectionSocket,)
+                target=handleChildClientConnection, args=(connectionSocket, addr)
             )
             client_handler.start()
             # handleChildClientConnection(connectionSocket)
