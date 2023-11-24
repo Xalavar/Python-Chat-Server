@@ -6,35 +6,69 @@ import threading
 currentUsers = {}
 registered_clients = {}
 
-
 def handleChildClientConnection(client, client_address):
     while True:
         try:
             message = client.recv(1024).decode()
             # message can be JOIN, LIST, etc...
 
-            message_array = message.split(" ")
-            request = message_array[0]
+            #message_array = message.split(" ")
+            request = message.split(" ")[0]
+            
+            # checking if the request has an input string (everything after request)
+            # makes it easier for parsing chat messages faster
+            message_array = message.split(" ", 1) # breaking up the request type and contents
+            if len(message_array) > 1:
+                message_array = message_array[1]
+            
             if request == "JOIN":
                 if len(currentUsers) >= 10:
                     sys.stdout.flush()  # Flush the output buffer
                     print("Too many users.")
                 else:
-                    currentUsers[client_address] = message_array[1]
+                    currentUsers[client_address] = message_array.split(" ")[0]
                     sys.stdout.flush()  # Flush the output buffer
-                    print(f"{message_array[1]} has joined!")
+                    print(f"{message_array.split(' ')[0]} has joined!")
                     registered_clients[client_address] = client
-                    msg = "You have joined."
-                    client.send(msg.encode())
+                    server_msg = "You have joined."
+                    client.send(server_msg.encode())
             elif request == "LIST":
                 sys.stdout.flush()  # Flush the output buffer
-                print("Current Users: ")
-                list_of_users = ""
+                list_of_users = ''
+                #list_of_users = ', '.join(list(currentUsers.keys()))
+                print(f"Current Users: ")
                 for key in currentUsers:
                     print(currentUsers[key])
                     list_of_users += currentUsers[key] + ", "
                 list_of_users = list_of_users[:-2]
                 client.send(list_of_users.encode())
+            elif request == "BCST":
+                sys.stdout.flush()  # Flush the output buffer
+                # Making sure the user sends an actual message
+                if len(message_array) == 1:
+                    server_msg = "Usage: BCST <your message>"
+                    client.send(server_msg.encode())
+                else:
+                    server_msg = "You're sending a broadcast."
+                    client.send(server_msg.encode())
+                    for ip in registered_clients.values():
+                        chat_msg = f"{currentUsers[client_address]}: {message_array}"
+                        ip.send(chat_msg.encode())
+            elif request == "MESG":
+                sys.stdout.flush()  # Flush the output buffer
+                private_msg_contents = message_array.split(" ", 1)
+                if len(message_array) < 2:
+                    server_msg = "Usage: MESG <user> <your message>"
+                    client.send(server_msg.encode())
+                #targeted_user = message_array.split(" ")[0];
+                # Checking if the specified username is in the list of registered clients
+                elif private_msg_contents[0] in registered_clients.values():
+                    chat_msg = f"[PM] {currentUsers[client_address]}: {private_msg_contents[1]}"
+                    pm_target = registered_clients.values()[private_msg_contents[0]]
+                    pm_target.send(chat_msg.encode())
+                else: 
+                    server_msg = "Error: Invalid username!"
+                    client.send(server_msg.encode())
             elif request == "QUIT":
                 # remove the user from currentUsers
                 sys.stdout.flush()  # Flush the output buffer
@@ -66,7 +100,7 @@ def main():
 
     # Verify that there are 2 command line arguments (file, port)
     if len(sys.argv) != 2:
-        print("Usage: python3 pingsvr.py <port>")
+        print("Usage: python3 server.py <port>")
         sys.exit(1)  # terminate program
 
     # Set up the server socket
