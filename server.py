@@ -71,7 +71,7 @@ def handleChildClientConnection(client, client_address):
                 # remove the user from currentUsers
                 sys.stdout.flush()  # Flush the output buffer
                 if currentUsers[client_address]:
-                    print(f"{currentUsers[client_address]} left the chat.") # Might not need this since exception comes up anyway
+                    print(f"{currentUsers[client_address]} left the chat.")
                 for ip in registered_clients.values():
                     server_msg = f"{currentUsers[client_address]} left."
                     ip.send(server_msg.encode())
