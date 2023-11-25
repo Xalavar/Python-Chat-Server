@@ -41,7 +41,7 @@ def main():
 
         # ask user to join server with username & store username data
         join_prompt = str(input("Enter JOIN followed by your username: "))
-        username = join_prompt.split(" ", 1)
+        username = join_prompt.split(" ", 1)[1]
         cli_sock.send(join_prompt.encode())
 
         while True:
@@ -61,8 +61,6 @@ def main():
                     print(f"{username} is quitting the chat server")
                     cli_sock.close()
                     sys.exit(0)
-
-                # still need to figure out how to show someone left on other connected client's ui
 
             except KeyboardInterrupt:
                 sys.stdout.flush()  # Flush the output buffer

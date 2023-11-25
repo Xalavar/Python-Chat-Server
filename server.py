@@ -63,15 +63,18 @@ def handleChildClientConnection(client, client_address):
                 else:
                 # Checking if the specified username is in the list of registered clients
                     for address, name in currentUsers.items():
-                        if private_msg_contents[0] == currentUsers[address]:
-                            chat_msg = f"[PM] {currentUsers[address]}: {private_msg_contents[1]}"
+                        if private_msg_contents[0] == name:
+                            chat_msg = f"[PM] {name}: {private_msg_contents[1]}"
                             registered_clients[address].send(chat_msg.encode())
                             client.send(chat_msg.encode())
             elif request == "QUIT":
                 # remove the user from currentUsers
                 sys.stdout.flush()  # Flush the output buffer
                 if currentUsers[client_address]:
-                    print(f"\n{currentUsers[client_address]} left the chat.")
+                    print(f"{currentUsers[client_address]} left the chat.") # Might not need this since exception comes up anyway
+                for ip in registered_clients.values():
+                    server_msg = f"{currentUsers[client_address]} left."
+                    ip.send(server_msg.encode())
                 sys.stdout.flush()  # Flush the output buffer
                 del registered_clients[client_address]
                 del currentUsers[client_address]
