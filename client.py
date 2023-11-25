@@ -1,21 +1,34 @@
+# client.py
+
+# ID: 301762851
+# Name: Alex Fedorov
+# Section: 6
+# Course Code: 86863
+# Date: 11/26/2023
+
+# Description:
+# This program acts as a chat client
+# The client attempts to connect to a server at a specified host and port
+# The client issues requests to the server and may ask the server to handle requests
+# The client can choose to disconnect from the server
+
+
 import socket  # importing socket library for creating a socket
 import sys  # importing sys library for program termination
 import signal  # importing signal which allows keyboard interrupt exceptions asynchronously
-import threading
+import threading  # importing threading to handle recieving server nessages
 
 
 def receive_messages(sock):
     while True:
         try:
-            data = sock.recv(1024).decode()
-            if not data:
+            data = sock.recv(1024).decode()  # recieve server message
+            if not data:  # if message is blank, ignore
                 break
             sys.stdout.flush()  # Flush the output buffer
-            print(f"{data}") # server response
+            print(f"{data}")  # print server response
             sys.stdout.flush()  # Flush the output buffer
         except socket.error as e:
-            sys.stdout.flush()  # Flush the output buffer
-            # print(f"Error receiving data: {e}")
             break
 
 
@@ -32,44 +45,69 @@ def main():
         sys.argv[2]
     )  # use server port number from command line arguments index 2, cast as integer
 
-    cli_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    cli_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # create TCP socket
     try:
-        cli_sock.connect((svr_host, svr_port))
+        cli_sock.connect((svr_host, svr_port))  # connect to server
 
+        # spawn thread to handle server messages
         receive_thread = threading.Thread(target=receive_messages, args=(cli_sock,))
         receive_thread.start()
 
-        # ask user to join server with username & store username data
-        join_prompt = str(input("Enter JOIN followed by your username: "))
-        username = join_prompt.split(" ")[1]
-        cli_sock.send(join_prompt.encode())
+        already_registered = False  # to check if client is registered in the chat room
+        username = ""  # to store username value
 
         while True:
             try:
-                message = input()
-                # to get client's request type
-                request = message.split(" ")[0]
-                
-                # checking if the request has an input string (everything after request)
-                message_array = message.split(" ", 1)
-                if len(message_array) > 1:
-                    message_array = message_array[1]
+                if not already_registered:
+                    # show this message to motivate the client to join the chat room if they are not yet registered
+                    message = str(
+                        input(
+                            "You are not a registered user. Enter JOIN followed by your username: "
+                        )
+                    )
+                else:
+                    # else, we can just print a blank space and wait for client input, because they are registered
+                    message = input()
 
-                cli_sock.sendall(message.encode())
+                # strip message from whitespace
+                message = message.strip()
+                message_array = message.split(" ")  # split the message into its parts
 
+                cli_sock.sendall(message.encode())  # send the message to the server
+
+                request = message_array[
+                    0
+                ]  # the first element of message array will be the request
+
+                # this if statement checks if it is the client's first time joining
+                if (
+                    request == "JOIN"
+                    and not already_registered
+                    and len(message_array) > 1
+                ):
+                    # set registered to true, save username
+                    already_registered = True
+                    username = message.split(" ", 1)[1]
+
+                # if the client wants to quit
                 if request == "QUIT":
-                    print(f"{username} is quitting the chat server")
-                    cli_sock.close()
+                    # check if username was created (if the client joined)
+                    if username:
+                        print(f"{username} is quitting the chat server")
+                    # exit program
                     sys.exit(0)
 
             except KeyboardInterrupt:
                 sys.stdout.flush()  # Flush the output buffer
                 print("\Client terminated by user (Ctrl-C).")
                 cli_sock.close()
+                sys.exit(0)
     except socket.error as e:
+        # on socket error, close the connection
         sys.stdout.flush()  # Flush the output buffer
         print(f"Error connecting to server: {e}")
         cli_sock.close()
+        sys.exit(0)
 
 
 # trick to check if current python module is being run as the main program or imported as a module
