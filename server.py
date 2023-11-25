@@ -60,20 +60,21 @@ def handleChildClientConnection(client, client_address):
                 if len(message_array) < 2:
                     server_msg = "Usage: MESG <user> <your message>"
                     client.send(server_msg.encode())
-                #targeted_user = message_array.split(" ")[0];
+                else:
                 # Checking if the specified username is in the list of registered clients
-                elif private_msg_contents[0] in registered_clients.values():
-                    chat_msg = f"[PM] {currentUsers[client_address]}: {private_msg_contents[1]}"
-                    pm_target = registered_clients.values()[private_msg_contents[0]]
-                    pm_target.send(chat_msg.encode())
-                else: 
-                    server_msg = "Error: Invalid username!"
-                    client.send(server_msg.encode())
+                    for address, name in currentUsers.items():
+                        if private_msg_contents[0] == name:
+                            chat_msg = f"[PM] {name}: {private_msg_contents[1]}"
+                            registered_clients[address].send(chat_msg.encode())
+                            client.send(chat_msg.encode())
             elif request == "QUIT":
                 # remove the user from currentUsers
                 sys.stdout.flush()  # Flush the output buffer
                 if currentUsers[client_address]:
-                    print(f"\n{currentUsers[client_address]} left the chat.")
+                    print(f"{currentUsers[client_address]} left the chat.")
+                for ip in registered_clients.values():
+                    server_msg = f"{currentUsers[client_address]} left."
+                    ip.send(server_msg.encode())
                 sys.stdout.flush()  # Flush the output buffer
                 del registered_clients[client_address]
                 del currentUsers[client_address]
