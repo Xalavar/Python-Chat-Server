@@ -146,7 +146,7 @@ def handleChildClientConnection(client, client_address):
                             if private_msg_contents[0] == name:
                                 # set found to true, we found a name match
                                 found = True
-                                chat_msg = f"[PM] {name}: {private_msg_contents[1]}"
+                                chat_msg = f"[PM] {currentUsers[client_address]}: {private_msg_contents[1]}"
                                 registered_clients[address].send(
                                     chat_msg.encode()
                                 )  # send message to that client
