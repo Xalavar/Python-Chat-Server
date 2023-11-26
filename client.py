@@ -1,10 +1,15 @@
 # client.py
 
-# ID: 301762851
-# Name: Alex Fedorov
-# Section: 6
+# CSC138 Section 6
 # Course Code: 86863
 # Date: 11/26/2023
+
+# Group Members:
+"""Alex Fedorov
+Jeffrey Melendez
+Nicholas Minor
+Danny Phan
+Angelo Ventura"""
 
 # Description:
 # This program acts as a chat client

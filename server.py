@@ -1,10 +1,16 @@
 # server.py
 
-# ID: 301762851
-# Name: Alex Fedorov
-# Section: 6
+# CSC138 Section 6
 # Course Code: 86863
 # Date: 11/26/2023
+
+# Group Members:
+"""Alex Fedorov
+Jeffrey Melendez
+Nicholas Minor
+Danny Phan
+Angelo Ventura"""
+
 
 # Description:
 # This program acts as a chat server
@@ -129,7 +135,6 @@ def handleChildClientConnection(client, client_address):
                 elif request == "MESG":
                     sys.stdout.flush()  # Flush the output buffer
                     # check if message request is correct
-                    print(message_array)
                     if len(message_array) < 2:
                         server_msg = "Usage: MESG <user> <your message>"
                         client.send(server_msg.encode())
